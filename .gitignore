@@ -5,3 +5,7 @@
 *.id2word
 *.state
 *.npy
+
+# vscode stuff #
+########
+.vscode/
