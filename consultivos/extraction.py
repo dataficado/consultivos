@@ -15,9 +15,13 @@ def extract(filepath):
     """
     De un archivo en filepath, extraer contenido, metadata e idioma.
 
-    :param filepath: str
+    Parameters
+    ----------
+    filepath: str
 
-    :return: dict ('contenido'(str), 'metadata'(dict), 'idioma'(str))
+    Returns
+    -------
+    dict ('contenido'(str), 'metadata'(dict), 'idioma'(str))
     """
     parsed = unpack.from_file(filepath)
     text = parsed.get('content')
@@ -32,10 +36,14 @@ def get_metavalue(meta, keys):
     """
     Saca valor de un diccionario según posibles keys presentes.
 
-    :param meta: dict
-    :param keys: tuple
+    Parameters
+    ----------
+    meta: dict
+    keys: tuple
 
-    :return: str
+    Returns
+    -------
+    str
     """
     assert type(keys) is tuple
 
@@ -51,10 +59,10 @@ def append_to_processed(filepath, data):
     """
     Incluye data como nueva fila en filepath.
 
-    :param filepath: str
-    :param data: tuple
-
-    :return: None
+    Parameters
+    ----------
+    filepath: str
+    data: tuple
     """
     assert type(data) is tuple
 
