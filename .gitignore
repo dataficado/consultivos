@@ -1,0 +1,7 @@
+# gensim stuff #
+#########
+*.dict
+*.lda
+*.id2word
+*.state
+*.npy
