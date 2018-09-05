@@ -2,6 +2,8 @@
 """Modulo para variables y funciones de uso comun."""
 import logging
 
+import pandas as pd
+
 
 def read_text(filepath):
     """
@@ -24,3 +26,25 @@ def read_text(filepath):
         text = ''
 
     return text
+
+
+def load_stopwords(filepath, sheet, col='word'):
+    """
+    Lee lista de palabras a usar como stopwords.
+    Palabras ubicadas en columna col de la hoja sheet.
+
+     Parameters
+    ----------
+    filepath: str or Path
+    sheet: str
+    col: str
+
+    Returns
+    -------
+    set
+       Stopwords
+    """
+    df = pd.read_excel(filepath, sheet_name=sheet)
+
+    return set(df[col])
+
