@@ -33,7 +33,7 @@ def load_stopwords(filepath, sheet, col='word'):
     Lee lista de palabras a usar como stopwords.
     Palabras ubicadas en columna col de la hoja sheet.
 
-     Parameters
+    Parameters
     ----------
     filepath: str or Path
     sheet: str
