@@ -3,7 +3,11 @@
 from pathlib import Path
 import logging
 
+from gensim.corpora import Dictionary
+from gensim.models import Phrases
+from gensim.models.phrases import Phraser
 import pandas as pd
+import spacy
 
 
 def ordered_filepaths(directory):
@@ -81,3 +85,158 @@ def load_stopwords(filepath, sheet, col='word'):
 
     return set(df[col])
 
+
+def process_tokens(container, other=None):
+    """
+    Procesa tokens del container, filtrando según criterios en other.
+
+    Parameters
+    ----------
+    container: spacy.tokens.Doc | spacy.tokens.Span
+    other: dict, optional (stopwords, postags, entities, stemmer)
+
+    Returns
+    -------
+    list of str
+    """
+    tokens = (tok for tok in container if tok.is_alpha)
+
+    if other:
+        if 'stopwords' in other:
+            tokens = (
+                tok for tok in tokens if tok.lower_ not in other['stopwords'])
+        if 'postags' in other:
+            tokens = (tok for tok in tokens if tok.pos_ in other['postags'])
+        if 'entities' in other:
+            tokens = (
+                tok for tok in tokens if tok.ent_type_ not in other['entities'])
+
+    wordlist = [tok.lower_ for tok in tokens]
+    if other and 'stemmer' in other:
+        wordlist = [other['stemmer'].stem(w) for w in wordlist]
+
+    return wordlist
+
+
+def doc_sentences(document, other=None):
+    """
+    Itera sobre cada frase de document filtrando según criterios en other.
+
+    Parameters
+    ----------
+    document: spacy.tokens.Doc
+    other: dict, optional (stopwords, postags, entities, stemmer)
+
+    Yields
+    ------
+    list of str
+    """
+    for sent in document.sents:
+        yield process_tokens(sent, other)
+
+
+def model_ngrams(sentences):
+    """
+    Crea modelos Phraser a partir de frase iterables en sentences,
+    para identificar ngramas recurrentes.
+
+    Parameters
+    ----------
+    sentences: iterable of list of str
+
+    Returns
+    -------
+    dict
+        Modelos Phraser para bigramas y trigramas
+    """
+    big = Phrases(sentences, min_count=5, threshold=50)
+    model_big = Phraser(big)
+
+    trig = Phrases(model_big[sentences], min_count=5, threshold=50)
+    model_trig = Phraser(trig)
+
+    return dict(bigrams=model_big, trigrams=model_trig)
+
+
+def iter_sentences(directory, lang, other=None):
+    """
+    Itera sobre cada documento en directory,
+    devolviendo palabras de cada frase de cada documento,
+    filtrando según criterios en other.
+
+    Parameters
+    ----------
+    directory: str
+    lang: spacy.lang
+    other: dict, optional
+
+    Yields
+    ------
+    list of str
+    """
+    for fpath in ordered_filepaths(directory):
+        text = read_text(fpath)
+        doc = lang(text)
+
+        yield from doc_sentences(doc, other)
+
+
+def iter_documents(ngrams, directory, lang, other=None):
+    """
+    Itera sobre cada documento en directory,
+    devolviendo lista de palabras de cada documento,
+    filtrando según criterios en other.
+    Listas de palabras pasan por modelos en ngrams.
+
+    Parameters
+    ----------
+    ngrams: dict (bigrams, trigrams)
+    directory: str
+    lang: spacy.lang
+    other: dict, optional
+
+    Yields
+    ------
+    list of str
+    """
+    bigrams = ngrams['bigrams']
+    trigrams = ngrams['trigrams']
+
+    for fpath in ordered_filepaths(directory):
+        text = read_text(fpath)
+        doc = lang(text)
+
+        words = []
+        for tokens in doc_sentences(doc, other):
+            words.extend(trigrams[bigrams[tokens]])
+
+        yield words
+
+
+class MiCorpus:
+    """
+    Iterable: en cada iteración devuelve vectores bag-of-words, uno por documento.
+    Procesa un documento a la vez usando generators. Nunca carga todo el corpus a RAM.
+    """
+
+    def __init__(self, directorio, lenguaje, otros=None):
+        self.directorio = directorio
+        self.lenguaje = lenguaje
+        self.otros = otros
+
+        self.ngramas = model_ngrams(iter_sentences(
+            self.directorio, self.lenguaje, self.otros))
+
+        self.diccionario = Dictionary(iter_documents(
+            self.ngramas, self.directorio, self.lenguaje, self.otros))
+        self.diccionario.filter_extremes(no_above=0.8)
+        self.diccionario.filter_tokens(
+            bad_ids=(tokid for tokid, freq in self.diccionario.dfs.items() if freq == 1))
+        self.diccionario.compactify()
+
+    def __iter__(self):
+        """
+        CorpusConsultivos es un streamed iterable.
+        """
+        for tokens in iter_documents(self.ngramas, self.directorio, self.lenguaje, self.otros):
+            yield self.diccionario.doc2bow(tokens)
