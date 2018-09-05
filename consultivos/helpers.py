@@ -1,6 +1,5 @@
 # coding: utf-8
 """Modulo para variables y funciones de uso comun."""
-from pathlib import Path
 import logging
 
 
