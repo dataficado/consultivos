@@ -168,7 +168,7 @@ def iter_sentences(directory, lang, other=None):
     ----------
     directory: str
     lang: spacy.lang
-    other: dict, optional
+    other: dict, optional (stopwords, postags, entities, stemmer)
 
     Yields
     ------
@@ -193,7 +193,7 @@ def iter_documents(ngrams, directory, lang, other=None):
     ngrams: dict (bigrams, trigrams)
     directory: str
     lang: spacy.lang
-    other: dict, optional
+    other: dict, optional (stopwords, postags, entities, stemmer)
 
     Yields
     ------
