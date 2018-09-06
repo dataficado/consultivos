@@ -11,4 +11,10 @@ Explora la posibilidad de aprender tópicos de las ayudas de memoria de los comi
 
     python extraction.py <path/to/original/docs/>
 
+- helpers.py
+    - Contiene funciones, variables y clases comunes que pueden ser usadas en diferentes archivos.
+    - Otros archivos la llaman con
+
+        *import helpers as hp*
+
 - notebooks exploratorios
