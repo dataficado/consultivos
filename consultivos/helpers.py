@@ -6,8 +6,33 @@ import logging
 from gensim.corpora import Dictionary
 from gensim.models import Phrases
 from gensim.models.phrases import Phraser
+from unidecode import unidecode
 import pandas as pd
 import spacy
+
+
+def change_filename(filepath):
+    """
+    Elimina caracteres no ascii en nombre de archivo en filepath.
+
+    Parameters
+    ----------
+    filepath: str or Path
+
+    Returns
+    -------
+    Path
+    """
+    fp = Path(filepath)
+    dirpath = fp.parent
+    filename = fp.name
+
+    if not all(ord(char) < 128 for char in filename):
+        deconame = unidecode(filename)
+        newpath = Path(dirpath, deconame)
+        fp.rename(newpath)
+
+    return newpath
 
 
 def ordered_filepaths(directory):
