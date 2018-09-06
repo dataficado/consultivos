@@ -11,3 +11,6 @@ trigramas
 # vscode stuff #
 ########
 .vscode/
+
+# otros #
+*.csv
