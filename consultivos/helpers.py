@@ -149,10 +149,10 @@ def model_ngrams(sentences):
     dict
         Modelos Phraser para bigramas y trigramas
     """
-    big = Phrases(sentences, min_count=5, threshold=50)
+    big = Phrases(sentences, min_count=5, threshold=10)
     model_big = Phraser(big)
 
-    trig = Phrases(model_big[sentences], min_count=5, threshold=50)
+    trig = Phrases(model_big[sentences], min_count=5, threshold=10)
     model_trig = Phraser(trig)
 
     return dict(bigrams=model_big, trigrams=model_trig)
