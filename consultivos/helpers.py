@@ -2,6 +2,7 @@
 """Modulo para variables y funciones de uso comun."""
 from pathlib import Path
 import logging
+import os
 
 from gensim.corpora import Dictionary
 from gensim.models import Phrases
@@ -33,6 +34,41 @@ def change_filename(filepath):
         fp.rename(newpath)
 
     return newpath
+
+
+def save_text(filepath, text):
+    """
+    Almacena text en filepath.
+
+    Parameters
+    ----------
+    filepath: str or Path
+    text: str
+    """
+    with open(filepath, "w", encoding='utf-8') as out:
+        out.write(text)
+
+
+def corpus_from_df(df, keep_cols, docs_col, outdir):
+    """
+    Crea archivos de texto en outdir para cada texto en docs_col.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+    keep_cols: list (names of columns to use as identifiers)
+    docs_col: str (name of column that contains texts)
+    outdir: str or Path
+    """
+    os.makedirs(outdir, exist_ok=True)
+    df = df.copy()
+    first = df[keep_cols[0]]
+    rest = df[keep_cols[1:]]
+    df['filename'] = first.str.cat(rest, sep=' ') + '.txt'
+    for _, s in df.iterrows():
+        filepath = Path(outdir).joinpath(s['filename'])
+        text = s[docs_col]
+        save_text(filepath, text)
 
 
 def ordered_filepaths(directory):
